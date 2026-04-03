@@ -1,0 +1,6 @@
+model/__pycache__
+patch_extractor/__pycache__
+models
+__pycache__
+losses/__pycache__
+Segmentation_mask.ome.tif

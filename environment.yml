@@ -1,0 +1,21 @@
+name: seg-tool
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - click
+  - numpy
+  - pandas
+  - rich
+  - tifffile
+  - imagecodecs
+  - captum
+  - pip
+  - pip:
+      - pytorch_lightning
+      - torchvision
+
+# pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+# pip install torch==2.1.1 torchvision==0.16.1 --index-url https://download.pytorch.org/whl/cu121
