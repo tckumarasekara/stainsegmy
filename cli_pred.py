@@ -10,10 +10,10 @@ import sys
 import tifffile as tiff
 import torch
 from rich import traceback
-from model.unet_instance import Unet, UneXt
+from model.unet_instance import Unet, UneXt, ContextUnet
 from patch_extractor.patch_extractor import PatchExtractor, MaskStitcher
 
-from utils import weights_init
+from model.utils import weights_init
 
 
 WD = os.path.dirname(__file__)
@@ -24,8 +24,8 @@ WD = os.path.dirname(__file__)
 @click.option('-c/-nc', '--cuda/--no-cuda', type=bool, default=False, help='Whether to enable cuda or not')
 @click.option('-o', '--output', default="", required=True, type=str, help='Folder path to write the output to')
 @click.option('-s/-ns', '--sanitize/--no-sanitize', type=bool, default=False, help='Whether to remove model after ''prediction or not.')
-@click.option('-m', '--model', type=str, default="models/U_NET.ckpt", help="Path to model")
-@click.option('--architecture', type=str, default="U-Net", help="U-Net or U-Next")
+@click.option('-m', '--model', type=str, default="dummy.ckpt", help="Path to model")
+@click.option('--architecture', type=str, default="U-Net", help="U-Net or U-Next or CU-Net")
 
 
 def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, architecture: str):
@@ -40,7 +40,7 @@ def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, archit
     - output (str): Folder path to write the output segmentation mask to.
     - sanitize (bool): Whether to remove the model file after prediction.
     - model (str): Path to the PyTorch model checkpoint to use for prediction.
-    - architecture (str): The architecture of the model (e.g., "U-Net", "U-NeXt").
+    - architecture (str): The architecture of the model (e.g., "U-Net", "U-NeXt", "CU-Net").
 
     returns:
     - None
@@ -150,7 +150,7 @@ def download(architecture) -> None:
     Download the model if it doesn't exist in processed_folder already.
 
     Parameters:
-    - architecture (str): The architecture of the model to download (e.g., "U-Net", "U-Next")
+    - architecture (str): The architecture of the model to download (e.g., "U-Net", "U-Next", "CU-Net")
 
     Returns:
     - None
@@ -161,7 +161,11 @@ def download(architecture) -> None:
     ]
     if architecture == "U-Net":
         resources = [
-            ("U_NET.ckpt", "7884684/files/U_NET.ckpt", "17511a0af673df264179fb93d73c9dd5"),
+            ("U_Net.ckpt", "19631105/files/U_Net.ckpt", "4644cb6d10ebfe2e672e82e6e45c0872"),
+        ]
+    elif architecture == "U-NeXt":
+        resources = [
+            ("U_NeXt.ckpt", "19631105/files/U_NeXt.ckpt", "92157b2f8b1b5f20ca3713355a1ccdc4"),
         ]
     elif architecture == "CU-Net":
         resources = [
@@ -315,31 +319,38 @@ def get_pytorch_model(path_to_pytorch_model: str, sanitize: bool, architecture: 
     parameters:
     - path_to_pytorch_model (str): Path to the PyTorch model checkpoint to load
     - sanitize (bool): Whether to remove the model file after loading
-    - architecture (str): The architecture of the model (e.g., "U-Net", "U-NeXt")       
+    - architecture (str): The architecture of the model (e.g., "U-Net", "U-NeXt", "CU-Net")       
 
     returns:
     - model (torch.nn.Module): The loaded PyTorch model ready for prediction
     """
 
     if not _check_exists(path_to_pytorch_model):
-        print("Model not found at {}.".format(path_to_pytorch_model))
+        print("Model not found at {}.".format(path_to_pytorch_model)) if path_to_pytorch_model != "dummy.ckpt" else None
 
-        if architecture in ["U-Net", "U-NeXt"]:
+        if architecture in ["U-Net", "U-NeXt", "CU-Net"]:
             download(architecture)
 
             if architecture == "U-Net":
-                model = Unet(hparams={}, input_channels=3, num_classes=7, flat_weights=True, dropout_val=True)
+                model = Unet(hparams={}, input_channels=3, num_classes=7, flat_weights=False, dropout_val=True)
                 model.apply(weights_init)
-                state_dict = torch.load("models/U_NET.ckpt", map_location="cpu")
-                path_to_pytorch_model = "models/U_NET.ckpt"
-                print("U-Net model loaded from zenodo")
+                state_dict = torch.load("models/U_Net.ckpt", map_location="cpu")
+                path_to_pytorch_model = "models/U_Net.ckpt"
+                #print("U-Net model loaded from zenodo")
 
             elif architecture == "U-NeXt":
                 model = UneXt(hparams={}, input_channels=3, num_classes=7, flat_weights=True, dropout_val=True)
                 model.apply(weights_init)
-                state_dict = torch.load("models/U_Next.ckpt", map_location="cpu")
-                path_to_pytorch_model = "models/U_Next.ckpt"
-                print("U-NeXt model loaded from zenodo")
+                state_dict = torch.load("models/U_NeXt.ckpt", map_location="cpu")
+                path_to_pytorch_model = "models/U_NeXt.ckpt"
+                #print("U-NeXt model loaded from zenodo")
+                
+            elif architecture == "CU-Net":
+                model = ContextUnet(hparams={}, input_channels=3, num_classes=7, flat_weights=True, dropout_val=True)
+                model.apply(weights_init)
+                state_dict = torch.load("models/CU_NET.ckpt", map_location="cpu")
+                path_to_pytorch_model = "models/CU_NET.ckpt"
+                #print("CU-Net model loaded from zenodo")
         else:
             raise KeyError("Please provide a valid architecture or a path to the model")
         
@@ -356,8 +367,13 @@ def get_pytorch_model(path_to_pytorch_model: str, sanitize: bool, architecture: 
             model.apply(weights_init)
             state_dict = torch.load(path_to_pytorch_model, map_location="cpu")
     
+        elif architecture == "CU-Net":
+            model = ContextUnet(hparams={}, input_channels=3, num_classes=7, flat_weights=True, dropout_val=True)
+            print("CU-Net model loaded from {}".format(path_to_pytorch_model))
+            model.apply(weights_init)
+            state_dict = torch.load(path_to_pytorch_model, map_location="cpu")
         else:
-            raise KeyError("Please provide the architecture name [U-Net, U-NeXt]")
+            raise KeyError("Please provide the architecture name [U-Net, U-NeXt, CU-Net]")
         
     model.load_state_dict(state_dict["state_dict"], strict=False)
     model.eval()

@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import os
 
-from losses.FocalLosses import FocalLoss, Cyclical_FocalLoss, DiceLoss
+from losses.FocalLosses import FocalLoss
 
 
 class UnetSuper(pl.LightningModule):
@@ -25,19 +25,11 @@ class UnetSuper(pl.LightningModule):
         else:
             self.weights = [0.5, 1, 1, 1, 1, 1, 1]
 
-        #if kwargs["loss"] == "FocalLoss":
-        #    self.criterion = FocalLoss(apply_nonlin=None, alpha=self.weights, gamma=2.0)
-        #else:
-        #    self.criterion = Cyclical_FocalLoss()
         self.criterion = FocalLoss(apply_nonlin=None, alpha=self.weights, gamma=2.0)
-
-        self.dice_criterion = DiceLoss()
-        self.dice_criterion.cuda()
 
         self.criterion.cuda()
         self._to_console = False
         self._val_outputs = []
-        #self._train_outputs = []
         self._test_metrics_per_image = []
         self._test_metrics_per_image.append(["id", "iou_class_0", "iou_class_1", "iou_class_2", "iou_class_3", "iou_class_4",
                                   "iou_class_5", "iou_class_6", "dice_class_0", "dice_class_1", "dice_class_2", "dice_class_3",
@@ -76,8 +68,6 @@ class UnetSuper(pl.LightningModule):
         :return: output - Initialized cross entropy loss function
         """
         labels = labels.long()
-        #focal_loss = self.criterion(logits, labels)
-        #dice_loss = self.dice_criterion(logits, labels)
 
         return self.criterion(logits, labels)
 
@@ -134,9 +124,6 @@ class UnetSuper(pl.LightningModule):
         output['val_loss'] = loss
 
         self._val_outputs.append(output)
-
-        #mean_iou = iter_iou_tensor.mean()
-        #self.log("val_mean_iou", mean_iou, on_step=False, on_epoch=True, prog_bar=True, sync_dist=True)
 
         return output
 

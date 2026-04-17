@@ -2,7 +2,7 @@ import sys
 #sys.modules.pop("model.model_components")
 from model.model_components import *
 from model.unet_super import UnetSuper
-from utils import weights_init
+from model.utils import weights_init
 import sys
 
 
@@ -42,20 +42,20 @@ class Unet(UnetSuper):
 
     def forward(self, inputs):
         maxpool = nn.MaxPool2d(kernel_size=2)
-        conv1 = self.conv1(inputs)  # 16*256*256
-        maxpool1 = maxpool(conv1)  # 16*128*128
+        conv1 = self.conv1(inputs)  
+        maxpool1 = maxpool(conv1)  
 
-        conv2 = self.conv2(maxpool1)  # 32*128*128
-        maxpool2 = maxpool(conv2)  # 32*64*64
+        conv2 = self.conv2(maxpool1)  
+        maxpool2 = maxpool(conv2)  
 
-        conv3 = self.conv3(maxpool2)  # 64*64*64
-        maxpool3 = maxpool(conv3)  # 64*32*32
+        conv3 = self.conv3(maxpool2)  
+        maxpool3 = maxpool(conv3) 
 
         center = self.center(maxpool3)
 
-        up3 = self.up_concat3(center, conv3)  # 64*64*64
-        up2 = self.up_concat2(up3, conv2)  # 32*128*128
-        up1 = self.up_concat1(up2, conv1)  # 16*256*256
+        up3 = self.up_concat3(center, conv3)  
+        up2 = self.up_concat2(up3, conv2) 
+        up1 = self.up_concat1(up2, conv1)  
 
         final = self.final(up1)
         finalize = nn.functional.softmax(final, dim=1)
@@ -125,21 +125,21 @@ class UneXt(UnetSuper):
 
     def forward(self, inputs):
 
-        stem = self.stem(inputs) # 16*256*256
-        conv1 = self.conv1(stem)  # 16*256*256
-        down1 = self.down1(conv1)  # 32*128*128
+        stem = self.stem(inputs) 
+        conv1 = self.conv1(stem) 
+        down1 = self.down1(conv1)  
 
-        conv2 = self.conv2(down1)  # 32*128*128
-        down2 = self.down2(conv2)  # 64*64*64
+        conv2 = self.conv2(down1)  
+        down2 = self.down2(conv2)  
 
-        conv3 = self.conv3(down2)  # 64*64*64
-        down3 = self.down3(conv3)  # 128*32*32
+        conv3 = self.conv3(down2) 
+        down3 = self.down3(conv3)  
 
-        center = self.center(down3) # 128*32*32
+        center = self.center(down3) 
 
-        up3 = self.up_concat3(center, conv3)  # 64*64*64
-        up2 = self.up_concat2(up3, conv2)  # 32*128*128
-        up1 = self.up_concat1(up2, conv1)  # 16*256*256
+        up3 = self.up_concat3(center, conv3)  
+        up2 = self.up_concat2(up3, conv2)  
+        up1 = self.up_concat1(up2, conv1)  
 
         final = self.final(up1)
         finalize = nn.functional.softmax(final, dim=1)
@@ -149,46 +149,6 @@ class UneXt(UnetSuper):
 
     def print(self, args: torch.Tensor) -> None:
         print(args)
-
-
-class swinUNETR(UnetSuper):
-
-    def __init__(self, hparams, input_channels, min_filter=16, on_gpu=False, **kwargs):
-        super().__init__(hparams=hparams, **kwargs)
-        self.in_channels = input_channels
-        filters = [32, 64, 128, 256]
-
-        self.encoder = SwinUnetrEnc(input_channels, filters[0])
-
-        self.up_concat3 = UnetUp(filters[3], filters[2], gpus=on_gpu, dropout_val=kwargs["dropout_val"])
-        self.up_concat2 = UnetUp(filters[2], filters[1], gpus=on_gpu, dropout_val=kwargs["dropout_val"])
-        self.up_concat1 = UnetUp(filters[1], filters[0], gpus=on_gpu, dropout_val=kwargs["dropout_val"])
-
-        self.final = nn.Sequential(
-            nn.Conv2d(filters[0], kwargs["num_classes"], kernel_size=1),
-            nn.Upsample(scale_factor=4, mode='bilinear', align_corners=False)  # upsample to match 256x256
-        )
-
-        if on_gpu:
-            self.encoder.cuda()
-            self.up_concat3.cuda()
-            self.up_concat2.cuda()
-            self.up_concat1.cuda()
-            self.final.cuda()
-
-        self.apply(weights_init)
-
-    def forward(self, inputs):
-        enc1, enc2, enc3, enc4 = self.encoder(inputs)
-
-        up3 = self.up_concat3(enc4, enc3)  # 64*64*64
-        up2 = self.up_concat2(up3, enc2)  # 32*128*128
-        up1 = self.up_concat1(up2, enc1)  # 16*256*256
-
-        final = self.final(up1)
-        finalize = nn.functional.softmax(final, dim=1)
-
-        return finalize
 
 
 
