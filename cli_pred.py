@@ -52,8 +52,14 @@ def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, archit
     model = get_pytorch_model(model, sanitize, architecture)
 
     if cuda:
-        model.cuda()
-    
+        if torch.cuda.is_available():
+            print("Using GPU..........")
+            model.cuda()
+        else:
+            print("CUDA requested but not available. Falling back to CPU..........")
+    else:
+        print("Using CPU..........")
+
     image = read_data_to_predict(input)
 
     if image.shape[0] < image.shape[2]:
