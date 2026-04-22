@@ -1,7 +1,7 @@
 ---
 name: Publish personal test container to GHCR
 
-"on":
+on:
   workflow_dispatch:
 
 permissions:
@@ -12,8 +12,10 @@ jobs:
   publish-ghcr-test:
     name: Build and publish personal test image
     runs-on: ubuntu-24.04
+
     env:
       IMAGE_NAME: ghcr.io/tckumarasekara/stainsegmy-test
+
     steps:
       - name: Check out source-code repository
         uses: actions/checkout@v4
@@ -31,14 +33,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # FIXED VERSION LOGIC
       - name: Set version
         id: vars
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          else
-            echo "VERSION=dev-${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
-          fi
+          echo "VERSION=dev-$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Build and push test image
         uses: docker/build-push-action@v6
@@ -58,3 +57,4 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.vars.outputs.VERSION }}
