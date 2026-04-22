@@ -1,0 +1,5 @@
+exclude data/*
+exclude models/*
+exclude __pycache__
+exclude 2751*
+exclude Segmentation_*

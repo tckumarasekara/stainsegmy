@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stainsegmy"
+version = "0.1.1"
+dependencies = [
+    "click==8.3.1",
+    "numpy==1.26.4",
+    "pandas==2.2.2",
+    "rich==14.3.3",
+    "tifffile==2025.5.10",
+    "imagecodecs==2025.3.30",
+    "captum==0.8.0",
+    "pytorch_lightning==2.6.1",
+    "torchvision==0.16.1"
+]
+
+[project.scripts]
+stainsegmy = "stainsegmy.cli_pred:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["stainsegmy*"]

@@ -10,16 +10,15 @@ import sys
 import tifffile as tiff
 import torch
 from rich import traceback
-from model.unet_instance import Unet, UneXt, ContextUnet
-from patch_extractor.patch_extractor import PatchExtractor, MaskStitcher
-
-from model.utils import weights_init
+from stainsegmy.model.unet_instance import Unet, UneXt, ContextUnet
+from stainsegmy.patch_extractor.patch_extractor import PatchExtractor, MaskStitcher
+from stainsegmy.model.utils import weights_init
 
 
 WD = os.path.dirname(__file__)
 
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 @click.command()

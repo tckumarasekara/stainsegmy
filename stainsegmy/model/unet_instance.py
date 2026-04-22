@@ -1,8 +1,8 @@
 import sys
 #sys.modules.pop("model.model_components")
-from model.model_components import *
-from model.unet_super import UnetSuper
-from model.utils import weights_init
+from stainsegmy.model.model_components import *
+from stainsegmy.model.unet_super import UnetSuper
+from stainsegmy.model.utils import weights_init
 import sys
 
 
