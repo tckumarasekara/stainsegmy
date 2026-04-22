@@ -45,8 +45,6 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.VERSION }}
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}

@@ -18,7 +18,7 @@ from stainsegmy.model.utils import weights_init
 WD = os.path.dirname(__file__)
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 @click.command()
