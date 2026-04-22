@@ -19,16 +19,20 @@ from model.utils import weights_init
 WD = os.path.dirname(__file__)
 
 
+__version__ = "0.1.0"
+
+
 @click.command()
-@click.option('-i', '--input', required=True, type=str, help='Path to data file to predict.')
+@click.option('-i', '--input', type=str, help='Path to data file to predict.')
 @click.option('-c/-nc', '--cuda/--no-cuda', type=bool, default=False, help='Whether to enable cuda or not')
-@click.option('-o', '--output', default="", required=True, type=str, help='Folder path to write the output to')
+@click.option('-o', '--output', default="", type=str, help='Folder path to write the output to')
 @click.option('-s/-ns', '--sanitize/--no-sanitize', type=bool, default=False, help='Whether to remove model after ''prediction or not.')
 @click.option('-m', '--model', type=str, default="dummy.ckpt", help="Path to model")
 @click.option('--architecture', type=str, default="U-Net", help="U-Net or U-Next or CU-Net")
+@click.option('--version', is_flag=True, help='Show version and exit')
 
 
-def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, architecture: str):
+def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, architecture: str, version: bool):
     """
     Main function to run the prediction pipeline. It loads the model, reads the input image, extracts patches, 
     predicts segmentation masks for each patch, stitches the masks together, and saves the final segmentation mask 
@@ -41,10 +45,20 @@ def main(input: str, cuda: bool, output: str, sanitize: bool, model: str, archit
     - sanitize (bool): Whether to remove the model file after prediction.
     - model (str): Path to the PyTorch model checkpoint to use for prediction.
     - architecture (str): The architecture of the model (e.g., "U-Net", "U-NeXt", "CU-Net").
+    - version (bool): Whether to print the version and exit.
 
     returns:
     - None
     """
+
+    if version:
+        print(__version__)
+        return
+    
+    if input is None:
+        raise click.UsageError("Missing required option '--input'")
+    if output is None:
+        raise click.UsageError("Missing required option '--output'")
 
     win_size = (256, 256)
     step_size = (206, 206)
