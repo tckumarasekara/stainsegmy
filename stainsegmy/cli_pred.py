@@ -13,12 +13,10 @@ from rich import traceback
 from stainsegmy.model.unet_instance import Unet, UneXt, ContextUnet
 from stainsegmy.patch_extractor.patch_extractor import PatchExtractor, MaskStitcher
 from stainsegmy.model.utils import weights_init
+from stainsegmy import __version__
 
 
 WD = os.path.dirname(__file__)
-
-
-__version__ = "0.1.3"
 
 
 @click.command()

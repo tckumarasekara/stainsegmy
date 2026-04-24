@@ -4,7 +4,7 @@ name: Publish personal test container to GHCR
 on:
   push:
     tags:
-      - "v*"
+      - "d*"
   workflow_dispatch:
 
 permissions:

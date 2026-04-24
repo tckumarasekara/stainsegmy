@@ -4,5 +4,6 @@ models
 __pycache__
 losses/__pycache__
 Segmentation_mask.ome.tif
-2751_*.tif
+2751*.tif
 data
+*.egg-info

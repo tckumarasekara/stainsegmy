@@ -1,10 +1,10 @@
----
 name: Publish container to GHCR
 
-"on":
+on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,9 +14,10 @@ jobs:
   publish-ghcr:
     name: Build and publish image
     runs-on: ubuntu-24.04
-    if: ${{ github.repository_owner == 'qbic-pipelines' }}
+
     env:
       IMAGE_NAME: ghcr.io/qbic-pipelines/stainsegmy
+
     steps:
       - name: Check out source-code repository
         uses: actions/checkout@v4
@@ -34,7 +35,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push main image
+      - name: Compute version
+        id: vars
+        run: echo "VERSION=${GITHUB_REF_NAME:-dev-$(echo $GITHUB_SHA | cut -c1-7)}" >> $GITHUB_OUTPUT
+
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -42,7 +47,7 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ${{ env.IMAGE_NAME }}:main
+            ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.VERSION }}
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
 
@@ -52,3 +57,4 @@ jobs:
           labels: |
             org.opencontainers.image.source=${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.vars.outputs.VERSION }}

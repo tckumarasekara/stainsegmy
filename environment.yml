@@ -1,4 +1,4 @@
-name: seg-tool
+name: stainsegmy-env
 channels:
   - pytorch
   - conda-forge
